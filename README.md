@@ -10,7 +10,7 @@ Creates EventBridge rules that trigger an AWS Batch job on a schedule. Supports 
 ```hcl
 module "batch_trigger" {
   source  = "YauhenBichel/eventbridge-batch-trigger/aws"
-  version = "1.0.0"
+  version = "1.1.0"
 
   env                        = "prod"
   service_domain             = "payments"
@@ -21,9 +21,15 @@ module "batch_trigger" {
   aws_batch_job_name         = "nightly-reconciliation"
   aws_batch_job_revision_arn = module.batch_job_revision.job_definition_arn
   execution_role_arn         = aws_iam_role.batch_execution.arn
+  job_queue_arn              = aws_batch_job_queue.main.arn
 
   schedule_expression        = "cron(0 2 * * ? *)"   # 02:00 daily
+  eventbridge_rule_enabled   = true
 }
+
+Without `eventbridge_rule_enabled = true` the rule is created in the `DISABLED`
+state and never fires. The flag defaults to `false` so that a rule can be
+declared before it is meant to run.
 ```
 
 ## Provider configuration
@@ -54,7 +60,7 @@ provider "aws" {
 | Name | Version |
 |---|---|
 | terraform | >= 1.0 |
-| aws provider | >= 4.0 |
+| aws provider | ~> 6.0 |
 
 ## Inputs
 
@@ -69,9 +75,12 @@ provider "aws" {
 | `schedule_expression` | `string` | `null` | Cron expression for the main rule |
 | `schedule_expression_hourly` | `string` | `null` | Cron expression for the hourly rule |
 | `aws_batch_job_name` | `string` | — | Batch job name to invoke |
-| `aws_batch_job_name_hourly` | `string` | — | Batch job name for the hourly rule |
+| `aws_batch_job_name_hourly` | `string` | `""` | Batch job name for the hourly rule. Only read when `schedule_expression_hourly` is set |
 | `aws_batch_job_revision_arn` | `string` | — | ARN of the job definition revision |
 | `execution_role_arn` | `string` | — | Execution role ARN |
+| `job_queue_arn` | `string` | — | ARN of the Batch job queue the rule targets |
+| `eventbridge_rule_enabled` | `bool` | `false` | `true` creates the main rule `ENABLED`; otherwise `DISABLED` |
+| `eventbridge_rule_hourly_enabled` | `bool` | `false` | Same, for the hourly rule |
 
 A dash in the Default column means the input is required.
 
@@ -84,6 +93,9 @@ A dash in the Default column means the input is required.
 | `main_eventbridge_rule_name` | Name of the main rule |
 | `hourly_eventbridge_rule_name` | Name of the hourly rule |
 | `main_eventbridge_rule_state` | State of the main rule |
+| `hourly_eventbridge_rule_state` | State of the hourly rule |
+| `event_target` | The main rule's Batch target |
+| `hourly_event_target` | The hourly rule's Batch target |
 
 ## Contributing
 
@@ -95,14 +107,6 @@ sending a large change.
 [MIT](LICENSE) — Yauhen Bichel
 
 ---
-
-## Contributors
-
-Thank you to everyone who has helped this project. Your code, reviews, issues, and pull requests are appreciated.
-
-- [@YauhenBichel](https://github.com/YauhenBichel)
-
-See the [full contributor graph](https://github.com/YauhenBichel/terraform-aws-eventbridge-batch-trigger/graphs/contributors).
 
 ## Contributors
 
