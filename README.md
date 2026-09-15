@@ -26,11 +26,11 @@ module "batch_trigger" {
   schedule_expression        = "cron(0 2 * * ? *)"   # 02:00 daily
   eventbridge_rule_enabled   = true
 }
+```
 
 Without `eventbridge_rule_enabled = true` the rule is created in the `DISABLED`
 state and never fires. The flag defaults to `false` so that a rule can be
 declared before it is meant to run.
-```
 
 ## Provider configuration
 
