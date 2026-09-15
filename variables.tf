@@ -60,6 +60,7 @@ variable "aws_batch_job_name" {
 }
 
 variable "aws_batch_job_name_hourly" {
+  default     = ""
   description = "AWS Batch Job Hourly name"
   type = string
 }
